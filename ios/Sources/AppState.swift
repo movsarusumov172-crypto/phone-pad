@@ -24,6 +24,12 @@ struct LightBarColor: Equatable {
     var g: Float = 0
     var b: Float = 0
 
+    init(r: Float = 0, g: Float = 0, b: Float = 0) {
+        self.r = r
+        self.g = g
+        self.b = b
+    }
+
     static let off = LightBarColor()
 
     var isOff: Bool { r == 0 && g == 0 && b == 0 }
@@ -242,7 +248,7 @@ final class AppState: ObservableObject {
 
         case .led:
             if let led = message.led {
-                let color = LightBarColor(r: led.r, green: led.g, blue: led.b)
+                let color = LightBarColor(r: led.r, g: led.g, b: led.b)
                 lightBar = color
                 // Гасим подсветку через короткое время, чтобы не горела постоянно.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
