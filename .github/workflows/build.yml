@@ -1,0 +1,222 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------- сервер --
+  pc-server:
+    name: PC-сервер (.NET, Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Исходники
+        uses: actions/checkout@v4
+
+      - name: Установить .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Восстановление пакетов
+        run: dotnet restore pc/src/PhonePad.SelfTest/PhonePad.SelfTest.csproj
+
+      - name: Сборка
+        run: dotnet build pc/src/PhonePad.SelfTest/PhonePad.SelfTest.csproj -c Release --no-restore
+
+      - name: Самопроверка протокола
+        run: dotnet run --project pc/src/PhonePad.SelfTest -c Release -f net8.0 --no-build
+
+      - name: Опубликовать сервер (self-contained win-x64)
+        run: >
+          dotnet publish pc/src/PhonePad.Server/PhonePad.Server.csproj
+          -c Release -f net8.0 -r win-x64 --self-contained -o publish
+
+      - name: Сквозной тест: сервер + симулятор телефона
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $server = Start-Process -FilePath '.\publish\PhonePadServer.exe' `
+            -ArgumentList '--backend', 'console', '--port', '8888', '--telemetry-port', '5300' `
+            -PassThru -RedirectStandardOutput 'server.log' -RedirectStandardError 'server.err'
+          try {
+            Start-Sleep -Seconds 3
+            python tools\phone_sim.py --host 127.0.0.1 --mode both --duration 6
+            Start-Sleep -Seconds 1
+          } finally {
+            if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+          }
+
+          $log = Get-Content server.log -Raw
+          Write-Host "----- сервер -----" -ForegroundColor Cyan
+          Write-Host $log
+          if ($log -notmatch 'телефон подключился') {
+            Write-Error 'Сервер не зафиксировал подключение телефона'
+          }
+          if ($log -notmatch '\[pad\]') {
+            Write-Error 'Сервер не принял пакеты ввода'
+          }
+
+      - name: Артефакт: PhonePadServer (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhonePadServer-win-x64
+          path: publish/
+          retention-days: 30
+
+  # ------------------------------------------------------------- симулятор --
+  simulator-selftest:
+    name: Симулятор телефона (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Исходники
+        uses: actions/checkout@v4
+
+      - name: Установить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Самопроверка кодеков протокола
+        run: python tools/phone_sim.py --mode selftest
+
+  # ------------------------------------------------------------------ iOS ---
+  ios-app:
+    name: iOS-приложение (Xcode)
+    runs-on: macos-14
+    steps:
+      - name: Исходники
+        uses: actions/checkout@v4
+
+      - name: Установить XcodeGen
+        run: brew install xcodegen
+
+      - name: Сгенерировать проект
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Проверка компиляции (симулятор)
+        working-directory: ios
+        run: >
+          xcodebuild
+          -project PhonePad.xcodeproj
+          -scheme PhonePad
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -configuration Release
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+      - name: Сборка для устройства (без подписи)
+        working-directory: ios
+        run: >
+          xcodebuild
+          -project PhonePad.xcodeproj
+          -scheme PhonePad
+          -sdk iphoneos
+          -configuration Release
+          -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+      - name: Упаковать IPA
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "build/Build/Products/Release-iphoneos/PhonePad.app" Payload/
+          zip -qry PhonePad-unsigned.ipa Payload
+          ls -lh PhonePad-unsigned.ipa
+
+      - name: Артефакт: неподписанный IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhonePad-ios-unsigned-ipa
+          path: ios/PhonePad-unsigned.ipa
+          retention-days: 30
+
+  # ------------------------------------------------- подписанный IPA (opt) --
+  ios-signed:
+    name: iOS-приложение (подписанный IPA)
+    runs-on: macos-14
+    # Работает, только если в секретах репозитория есть данные для подписи.
+    if: ${{ github.event_name == 'workflow_dispatch' && vars.APPLE_SIGNING_ENABLED == 'true' }}
+    steps:
+      - name: Исходники
+        uses: actions/checkout@v4
+
+      - name: Установить XcodeGen
+        run: brew install xcodegen
+
+      - name: Импорт сертификата и профиля
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/PhonePad.mobileprovision"
+          KEYCHAIN="$RUNNER_TEMP/phonepad.keychain-db"
+
+          echo -n "$CERTIFICATE" | base64 --decode -o "$CERT_PATH"
+          echo -n "$PROFILE"  | base64 --decode -o "$PROFILE_PATH"
+
+          security create-keychain -p phonepad "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p phonepad "$KEYCHAIN"
+          security import "$CERT_PATH" -k "$KEYCHAIN" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k phonepad "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_NAME"
+
+      - name: Сгенерировать проект
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Сборка с подписью
+        working-directory: ios
+        env:
+          DEVELOPMENT_TEAM: ${{ vars.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
+        run: >
+          xcodebuild
+          -project PhonePad.xcodeproj
+          -scheme PhonePad
+          -sdk iphoneos
+          -configuration Release
+          -derivedDataPath build
+          -allowProvisioningUpdates
+          CODE_SIGN_STYLE=Manual
+          CODE_SIGN_IDENTITY='Apple Development'
+          DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
+          PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+          build
+
+      - name: Упаковать IPA
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "build/Build/Products/Release-iphoneos/PhonePad.app" Payload/
+          zip -qry PhonePad-signed.ipa Payload
+          ls -lh PhonePad-signed.ipa
+
+      - name: Артефакт: подписанный IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhonePad-ios-signed-ipa
+          path: ios/PhonePad-signed.ipa
+          retention-days: 30
