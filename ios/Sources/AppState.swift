@@ -17,6 +17,18 @@ struct HudData {
     var onRumbleStrip = false
 }
 
+/// Цвет «световой полосы» (эмуляция light bar контроллера).
+/// Хранится как числа, а не как `Color`, чтобы его можно было сравнивать.
+struct LightBarColor: Equatable {
+    var r: Double = 0
+    var g: Double = 0
+    var b: Double = 0
+
+    static let off = LightBarColor()
+
+    var isOff: Bool { r == 0 && g == 0 && b == 0 }
+}
+
 /// Общее состояние приложения: связь, ввод, тактильность, звук, HUD.
 final class AppState: ObservableObject {
     @Published var serverHost: String = ""
@@ -36,7 +48,7 @@ final class AppState: ObservableObject {
     @Published var serverMessage: String = ""
 
     /// Цвет «световой полосы» (эмуляция light bar контроллера).
-    @Published var lightBar: Color = .clear
+    @Published var lightBar = LightBarColor.off
 
     let pad = PadController()
     let net = NetClient()
@@ -230,11 +242,12 @@ final class AppState: ObservableObject {
 
         case .led:
             if let led = message.led {
-                lightBar = Color(red: led.r, green: led.g, blue: led.b)
+                let color = LightBarColor(r: led.r, green: led.g, blue: led.b)
+                lightBar = color
                 // Гасим подсветку через короткое время, чтобы не горела постоянно.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                    guard let self, self.lightBar == Color(red: led.r, green: led.g, blue: led.b) else { return }
-                    self.lightBar = .clear
+                    guard let self, self.lightBar == color else { return }
+                    self.lightBar = .off
                 }
             }
 

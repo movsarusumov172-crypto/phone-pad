@@ -63,7 +63,7 @@ struct StatusBar: View {
     let status: ConnectionStatus
     let gyroEnabled: Bool
     let message: String
-    let lightBar: Color
+    let lightBar: LightBarColor
     let onSettings: () -> Void
     let onGyro: () -> Void
     let onCalibrate: () -> Void
@@ -133,9 +133,9 @@ struct StatusBar: View {
             // Эмуляция «световой полосы» контроллера: iOS не умеет менять цвет LED,
             // поэтому показываем цветную полосу под строкой статуса.
             Rectangle()
-                .fill(lightBar)
+                .fill(Color(red: lightBar.r, green: lightBar.g, blue: lightBar.b))
                 .frame(height: 2)
-                .opacity(lightBar == .clear ? 0 : 1)
+                .opacity(lightBar.isOff ? 0 : 1)
                 .animation(.easeOut(duration: 0.15), value: lightBar)
         }
         .padding(.horizontal, 14)

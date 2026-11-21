@@ -91,7 +91,7 @@ jobs:
   # ------------------------------------------------------------------ iOS ---
   ios-app:
     name: iOS-приложение (Xcode)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Исходники
         uses: actions/checkout@v4
@@ -147,7 +147,7 @@ jobs:
   # ------------------------------------------------- подписанный IPA (opt) --
   ios-signed:
     name: iOS-приложение (подписанный IPA)
-    runs-on: macos-14
+    runs-on: macos-15
     # Работает, только если в секретах репозитория есть данные для подписи.
     if: ${{ github.event_name == 'workflow_dispatch' && vars.APPLE_SIGNING_ENABLED == 'true' }}
     steps:
