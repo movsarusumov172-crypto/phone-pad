@@ -40,7 +40,7 @@ jobs:
           dotnet publish pc/src/PhonePad.Server/PhonePad.Server.csproj
           -c Release -f net8.0 -r win-x64 --self-contained -o publish
 
-      - name: Сквозной тест: сервер + симулятор телефона
+      - name: "Сквозной тест: сервер + симулятор телефона"
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -65,7 +65,7 @@ jobs:
             Write-Error 'Сервер не принял пакеты ввода'
           }
 
-      - name: Артефакт: PhonePadServer (Windows)
+      - name: "Артефакт: PhonePadServer (Windows)"
         uses: actions/upload-artifact@v4
         with:
           name: PhonePadServer-win-x64
@@ -137,7 +137,7 @@ jobs:
           zip -qry PhonePad-unsigned.ipa Payload
           ls -lh PhonePad-unsigned.ipa
 
-      - name: Артефакт: неподписанный IPA
+      - name: "Артефакт: неподписанный IPA"
         uses: actions/upload-artifact@v4
         with:
           name: PhonePad-ios-unsigned-ipa
@@ -214,7 +214,7 @@ jobs:
           zip -qry PhonePad-signed.ipa Payload
           ls -lh PhonePad-signed.ipa
 
-      - name: Артефакт: подписанный IPA
+      - name: "Артефакт: подписанный IPA"
         uses: actions/upload-artifact@v4
         with:
           name: PhonePad-ios-signed-ipa
