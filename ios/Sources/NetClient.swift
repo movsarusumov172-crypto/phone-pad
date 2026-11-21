@@ -149,14 +149,19 @@ final class NetClient: ObservableObject {
     func stop() {
         keepAliveTimer?.cancel()
         keepAliveTimer = nil
-        if let connection {
-            connection.cancel()
-            connection = nil
+
+        // Важно: не пишем `connection = nil` внутри `if let connection` —
+        // там имя shadow'ится константой, и присваивание не компилируется.
+        if let current = connection {
+            current.cancel()
         }
-        if let listener {
-            listener.cancel()
-            listener = nil
+        connection = nil
+
+        if let current = listener {
+            current.cancel()
         }
+        listener = nil
+
         peers.removeAll()
         sequence = 0
         status = .disconnected

@@ -20,9 +20,9 @@ struct HudData {
 /// Цвет «световой полосы» (эмуляция light bar контроллера).
 /// Хранится как числа, а не как `Color`, чтобы его можно было сравнивать.
 struct LightBarColor: Equatable {
-    var r: Double = 0
-    var g: Double = 0
-    var b: Double = 0
+    var r: Float = 0
+    var g: Float = 0
+    var b: Float = 0
 
     static let off = LightBarColor()
 

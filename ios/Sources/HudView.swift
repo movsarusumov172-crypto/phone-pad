@@ -133,7 +133,7 @@ struct StatusBar: View {
             // Эмуляция «световой полосы» контроллера: iOS не умеет менять цвет LED,
             // поэтому показываем цветную полосу под строкой статуса.
             Rectangle()
-                .fill(Color(red: lightBar.r, green: lightBar.g, blue: lightBar.b))
+                .fill(Color(red: Double(lightBar.r), green: Double(lightBar.g), blue: Double(lightBar.b)))
                 .frame(height: 2)
                 .opacity(lightBar.isOff ? 0 : 1)
                 .animation(.easeOut(duration: 0.15), value: lightBar)

@@ -143,40 +143,51 @@ final class HapticsEngine {
         var events: [CHHapticEvent] = []
 
         if state.low > 0.01 {
+            // Низкая полоса — ровная непрерывная вибрация (вес, удары, двигатель).
             events.append(CHHapticEvent(
                 eventType: .hapticContinuous,
                 parameters: [
                     CHHapticEventParameter(parameterID: .hapticIntensity, value: min(1, state.low) * intensityScale),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpnessFor(state.lowFreq)),
-                    CHHapticEventParameter(parameterID: .hapticFrequency, value: frequencyFor(state.lowFreq))
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpnessFor(freq: state.lowFreq))
                 ],
                 relativeTime: 0,
                 duration: chunkDuration))
         }
 
         if state.high > 0.01 {
-            events.append(CHHapticEvent(
-                eventType: .hapticContinuous,
-                parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: min(1, state.high) * intensityScale),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpnessFor(state.highFreq)),
-                    CHHapticEventParameter(parameterID: .hapticFrequency, value: frequencyFor(state.highFreq))
-                ],
-                relativeTime: 0,
-                duration: chunkDuration))
+            // Высокая полоса — «текстура» поверхности. В CoreHaptics у события
+            // нет параметра частоты, поэтому частота превращается в число
+            // коротких импульсов за один кусок: чем выше частота, тем «шуршащее».
+            events.append(contentsOf: textureEvents(strength: state.high, freq: state.highFreq))
         }
 
         play(events: events, duration: chunkDuration)
+    }
+
+    /// Серия коротких импульсов, имитирующих высокочастотную текстуру.
+    private func textureEvents(strength: Float, freq: Float) -> [CHHapticEvent] {
+        let count = max(1, min(4, Int(freq / 60)))
+        let step = chunkDuration / Double(count)
+        let sharpness = sharpnessFor(freq: freq)
+
+        var events: [CHHapticEvent] = []
+        for i in 0..<count {
+            events.append(CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: min(1, strength) * intensityScale),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+                ],
+                relativeTime: Double(i) * step))
+        }
+
+        return events
     }
 
     /// Низкая частота → мягкая «гудящая» текстура, высокая → резкая.
     private func sharpnessFor(freq: Float) -> Float {
         let normalized = max(0, min(1, (freq - 20) / 200))
         return 0.15 + normalized * 0.8
-    }
-
-    private func frequencyFor(freq: Float) -> Float {
-        max(10, min(300, freq))
     }
 
     private func play(events: [CHHapticEvent], duration: TimeInterval) {
