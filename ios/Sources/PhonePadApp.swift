@@ -24,12 +24,25 @@ struct PhonePadApp: App {
     }
 }
 
+/// Ключ для получения размера экрана без влияния на вёрстку.
+private struct ScreenSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        if next != .zero {
+            value = next
+        }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject private var app: AppState
+    @State private var screenSize: CGSize = .zero
 
     var body: some View {
-        GeometryReader { geo in
-            if geo.size.height > geo.size.width {
+        Group {
+            if screenSize.height > screenSize.width {
                 // Портрет: телефон лежит неправильно — показываем подсказку
                 // вместо сломанной раскладки.
                 RotateHintView()
@@ -67,6 +80,15 @@ struct ContentView: View {
                 }
             }
         }
+        // Размер экрана измеряем фоновым GeometryReader: он ничего не влияет
+        // на вёрстку, в отличие от обёртки всего интерфейса в GeometryReader
+        // (тогда панель пада уезжала бы внутрь безопасной зоны от выреза).
+        .background {
+            GeometryReader { geo in
+                Color.clear.preference(key: ScreenSizeKey.self, value: geo.size)
+            }
+        }
+        .onPreferenceChange(ScreenSizeKey.self) { screenSize = $0 }
         .onAppear {
             // экран не должен гаснуть во время игры
             UIApplication.shared.isIdleTimerDisabled = true
