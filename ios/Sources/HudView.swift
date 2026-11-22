@@ -1,69 +1,61 @@
 import SwiftUI
 
-/// Индикатор скорости/передачи поверх экрана пада.
+/// Компактный HUD для строки статуса: скорость, передача, обороты, газ/тормоз.
+/// Живёт прямо в верхней полосе — отдельно он перекрывал бы зону руля.
 struct HudView: View {
     let hud: HudData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text("\(hud.speed)")
-                    .font(.system(size: 34, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
-                Text("км/ч")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6))
+        HStack(spacing: 8) {
+            Text("\(hud.speed)")
+                .font(.system(size: 20, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
 
-                if hud.isRaceOn {
-                    Text(hud.gear == 0 ? "N" : "\(hud.gear)")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(hud.gear > 0 ? .orange : .white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 1)
-                        .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
-                }
-            }
+            Text("км/ч")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.55))
 
             if hud.isRaceOn {
-                VStack(alignment: .leading, spacing: 3) {
-                    bar(value: Double(hud.rpm) / Double(max(1, hud.maxRpm)), color: .orange, height: 5)
-                    HStack(spacing: 10) {
-                        bar(value: Double(hud.throttle) / 255, color: .green, height: 3)
-                        bar(value: Double(hud.brake) / 255, color: .red, height: 3)
-                    }
-                    if hud.slip > 0.05 {
-                        Text("slip \(String(format: "%.2f", hud.slip))")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(.yellow)
-                    }
+                Text(hud.gear == 0 ? "N" : "\(hud.gear)")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(hud.gear > 0 ? .orange : .white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 6))
+
+                bar(value: Double(hud.rpm) / Double(max(1, hud.maxRpm)), color: .orange, width: 64, height: 5)
+
+                HStack(spacing: 4) {
+                    bar(value: Double(hud.throttle) / 255, color: .green, width: 22, height: 4)
+                    bar(value: Double(hud.brake) / 255, color: .red, width: 22, height: 4)
                 }
             }
         }
         .foregroundStyle(.white)
-        .padding(10)
-        .background(Color.black.opacity(0.45), in: RoundedRectangle(cornerRadius: 12))
-        .shadow(radius: 6)
     }
 
-    private func bar(value: Double, color: Color, height: CGFloat) -> some View {
+    private func bar(value: Double, color: Color, width: CGFloat, height: CGFloat) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.15))
+                Capsule().fill(Color.white.opacity(0.18))
                 Capsule()
                     .fill(color)
                     .frame(width: geo.size.width * max(0, min(1, value)))
             }
         }
-        .frame(height: height)
+        .frame(width: width, height: height)
     }
 }
 
-/// Верхняя панель: статус связи, «световая полоса» и кнопки.
+/// Верхняя панель: статус связи, HUD, «световая полоса» и кнопки.
 struct StatusBar: View {
     let status: ConnectionStatus
     let gyroEnabled: Bool
     let message: String
     let lightBar: LightBarColor
+    let hud: HudData
+    let showHUD: Bool
     let onSettings: () -> Void
     let onGyro: () -> Void
     let onCalibrate: () -> Void
@@ -71,18 +63,22 @@ struct StatusBar: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Circle()
                     .fill(statusColor)
-                    .frame(width: 9, height: 9)
+                    .frame(width: 8, height: 8)
 
                 Text(status.rawValue)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.85))
+
+                if showHUD {
+                    HudView(hud: hud)
+                }
 
                 if !message.isEmpty {
                     Text(message)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -103,8 +99,8 @@ struct StatusBar: View {
 
                 Button(action: onGyro) {
                     Label("Гиро", systemImage: "gyroscope")
-                        .font(.system(size: 12, weight: .semibold))
-                        .padding(.horizontal, 10)
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(.horizontal, 9)
                         .padding(.vertical, 6)
                         .background(gyroEnabled ? Color.orange.opacity(0.85) : Color.white.opacity(0.15),
                                     in: Capsule())
@@ -138,8 +134,8 @@ struct StatusBar: View {
                 .opacity(lightBar.isOff ? 0 : 1)
                 .animation(.easeOut(duration: 0.15), value: lightBar)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
         .background(Color.black.opacity(0.35), in: Capsule())
     }
 

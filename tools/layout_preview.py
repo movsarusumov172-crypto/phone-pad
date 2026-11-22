@@ -108,22 +108,18 @@ def main() -> int:
     img = Image.new("RGB", (w, h), (0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    # Панель статуса приложения — как в PhonePadApp.
+    # Панель статуса приложения + компактный HUD внутри неё.
     d.rounded_rectangle((12 * SCALE, 6 * SCALE, w - 12 * SCALE, 48 * SCALE),
                         radius=18 * SCALE, fill=(20, 20, 22))
     d.text((30 * SCALE, 18 * SCALE), "нет связи", font=font(12), fill=(220, 220, 225))
     d.ellipse((18 * SCALE, 22 * SCALE, 26 * SCALE, 30 * SCALE), fill=(240, 160, 40))
+    d.text((96 * SCALE, 16 * SCALE), "0", font=font(18), fill=(255, 255, 255))
+    d.text((116 * SCALE, 21 * SCALE), "км/ч", font=font(9), fill=(150, 150, 155))
     # Кнопки справа.
     for i, label in enumerate(["Гиро", "((·))", "⚙"]):
         x = w - (250 - i * 70) * SCALE
         d.ellipse((x, 12 * SCALE, x + 32 * SCALE, 44 * SCALE), fill=(42, 42, 46))
         d.text((x + 8 * SCALE, 20 * SCALE), label, font=font(11), fill=(235, 235, 240))
-
-    # HUD (компактный, прижат к левому краю).
-    d.rounded_rectangle((12 * SCALE, 52 * SCALE, 118 * SCALE, 100 * SCALE),
-                        radius=10 * SCALE, fill=(12, 12, 14))
-    d.text((20 * SCALE, 58 * SCALE), "0", font=font(28), fill=(255, 255, 255))
-    d.text((48 * SCALE, 70 * SCALE), "км/ч", font=font(11), fill=(150, 150, 155))
 
     for cid, (nx, ny, nw, nh) in LAYOUTS[args.layout].items():
         x = nx * w

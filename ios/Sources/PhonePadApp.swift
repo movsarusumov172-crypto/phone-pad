@@ -56,6 +56,8 @@ struct ContentView: View {
                                   gyroEnabled: app.gyroEnabled,
                                   message: app.serverMessage,
                                   lightBar: app.lightBar,
+                                  hud: app.hud,
+                                  showHUD: app.showHUD,
                                   onSettings: { app.showSettings = true },
                                   onGyro: { app.toggleGyro() },
                                   onCalibrate: { app.calibrateGyro() },
@@ -63,13 +65,6 @@ struct ContentView: View {
                                       if app.status == .connected { app.disconnect() } else { app.connect() }
                                   })
                             .padding(.horizontal, 12)
-
-                        if app.showHUD {
-                            HudView(hud: app.hud)
-                                // HUD — информационный слой: он лежит поверх пада,
-                                // но не должен перехватывать касания.
-                                .allowsHitTesting(false)
-                        }
 
                         Spacer()
                     }
