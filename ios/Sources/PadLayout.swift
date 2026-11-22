@@ -34,74 +34,77 @@ enum PadLayoutKind: String, CaseIterable, Identifiable {
 
 enum PadLayout {
     /// Полная раскладка: стики, D-pad, крестовина, бамперы, триггеры-ползунки.
+    ///
+    /// Раскладка рассчитана на телефон в ландшафте (874×402 pt у iPhone 16 Pro):
+    /// сверху 58 pt заняты панелью статуса, слева сверху — панель HUD,
+    /// поэтому элементы не наезжают друг на друга и не прячутся под HUD.
     static let full: [PadControl] = [
-        // Левый стик
+        // Левый стик (низ слева)
         PadControl(id: "ls", kind: .stick(axis: .left, floating: true),
-                   frame: CGRect(x: 0.05, y: 0.40, width: 0.20, height: 0.34),
+                   frame: CGRect(x: 0.075, y: 0.50, width: 0.20, height: 0.38),
                    label: "L", isRound: true, stickRadius: 0.085),
-        // D-pad (четыре отдельные зоны — надёжнее, чем анализ диагоналей)
-        PadControl(id: "dpad_up", kind: .button(mask: Btn.dpadUp),
-                   frame: CGRect(x: 0.05, y: 0.28, width: 0.07, height: 0.07), label: "▲"),
-        PadControl(id: "dpad_down", kind: .button(mask: Btn.dpadDown),
-                   frame: CGRect(x: 0.05, y: 0.14, width: 0.07, height: 0.07), label: "▼"),
-        PadControl(id: "dpad_left", kind: .button(mask: Btn.dpadLeft),
-                   frame: CGRect(x: 0.005, y: 0.21, width: 0.07, height: 0.07), label: "◀"),
-        PadControl(id: "dpad_right", kind: .button(mask: Btn.dpadRight),
-                   frame: CGRect(x: 0.095, y: 0.21, width: 0.07, height: 0.07), label: "▶"),
 
-        // Правый стик
+        // D-pad (слева сверху, под панелью HUD)
+        PadControl(id: "dpad_up", kind: .button(mask: Btn.dpadUp),
+                   frame: CGRect(x: 0.108, y: 0.16, width: 0.074, height: 0.074), label: "▲"),
+        PadControl(id: "dpad_down", kind: .button(mask: Btn.dpadDown),
+                   frame: CGRect(x: 0.108, y: 0.345, width: 0.074, height: 0.074), label: "▼"),
+        PadControl(id: "dpad_left", kind: .button(mask: Btn.dpadLeft),
+                   frame: CGRect(x: 0.062, y: 0.253, width: 0.074, height: 0.074), label: "◀"),
+        PadControl(id: "dpad_right", kind: .button(mask: Btn.dpadRight),
+                   frame: CGRect(x: 0.154, y: 0.253, width: 0.074, height: 0.074), label: "▶"),
+
+        // Правый стик (низ справа)
         PadControl(id: "rs", kind: .stick(axis: .right, floating: true),
-                   frame: CGRect(x: 0.75, y: 0.06, width: 0.20, height: 0.34),
+                   frame: CGRect(x: 0.70, y: 0.48, width: 0.20, height: 0.38),
                    label: "R", isRound: true, stickRadius: 0.085),
 
         // Крестовина (Y сверху, X слева, B справа, A снизу — раскладка Xbox)
         PadControl(id: "btn_y", kind: .button(mask: Btn.y),
-                   frame: CGRect(x: 0.855, y: 0.40, width: 0.075, height: 0.075),
+                   frame: CGRect(x: 0.795, y: 0.13, width: 0.07, height: 0.07),
                    label: "Y", isRound: true),
         PadControl(id: "btn_x", kind: .button(mask: Btn.x),
-                   frame: CGRect(x: 0.775, y: 0.475, width: 0.075, height: 0.075),
+                   frame: CGRect(x: 0.715, y: 0.21, width: 0.07, height: 0.07),
                    label: "X", isRound: true),
         PadControl(id: "btn_b", kind: .button(mask: Btn.b),
-                   frame: CGRect(x: 0.935, y: 0.475, width: 0.075, height: 0.075),
+                   frame: CGRect(x: 0.875, y: 0.21, width: 0.07, height: 0.07),
                    label: "B", isRound: true),
         PadControl(id: "btn_a", kind: .button(mask: Btn.a),
-                   frame: CGRect(x: 0.855, y: 0.55, width: 0.075, height: 0.075),
+                   frame: CGRect(x: 0.795, y: 0.29, width: 0.07, height: 0.07),
                    label: "A", isRound: true),
 
-        // Бамперы
+        // Бамперы и центральные кнопки — верхняя полоса, между HUD и крестовиной
         PadControl(id: "lb", kind: .button(mask: Btn.lb),
-                   frame: CGRect(x: 0.27, y: 0.02, width: 0.14, height: 0.08), label: "LB"),
+                   frame: CGRect(x: 0.33, y: 0.02, width: 0.13, height: 0.075), label: "LB"),
         PadControl(id: "rb", kind: .button(mask: Btn.rb),
-                   frame: CGRect(x: 0.59, y: 0.02, width: 0.14, height: 0.08), label: "RB"),
-
-        // Триггеры — вертикальные ползунки по краям экрана
-        PadControl(id: "lt", kind: .trigger(isLeft: true),
-                   frame: CGRect(x: 0.0, y: 0.12, width: 0.045, height: 0.76), label: "LT"),
-        PadControl(id: "rt", kind: .trigger(isLeft: false),
-                   frame: CGRect(x: 0.955, y: 0.12, width: 0.045, height: 0.76), label: "RT"),
-
-        // Start / Back / Guide
+                   frame: CGRect(x: 0.60, y: 0.02, width: 0.13, height: 0.075), label: "RB"),
         PadControl(id: "back", kind: .button(mask: Btn.back),
-                   frame: CGRect(x: 0.42, y: 0.02, width: 0.06, height: 0.07), label: "≡"),
+                   frame: CGRect(x: 0.475, y: 0.02, width: 0.055, height: 0.075), label: "≡"),
         PadControl(id: "start", kind: .button(mask: Btn.start),
-                   frame: CGRect(x: 0.52, y: 0.02, width: 0.06, height: 0.07), label: "▷"),
+                   frame: CGRect(x: 0.545, y: 0.02, width: 0.055, height: 0.075), label: "▷"),
         PadControl(id: "guide", kind: .button(mask: Btn.guide),
-                   frame: CGRect(x: 0.47, y: 0.10, width: 0.06, height: 0.06), label: "PS", isRound: true)
+                   frame: CGRect(x: 0.49, y: 0.13, width: 0.06, height: 0.06), label: "PS", isRound: true),
+
+        // Триггеры — узкие ползунки у краёв экрана, ниже HUD
+        PadControl(id: "lt", kind: .trigger(isLeft: true),
+                   frame: CGRect(x: 0.0, y: 0.22, width: 0.042, height: 0.72), label: "LT"),
+        PadControl(id: "rt", kind: .trigger(isLeft: false),
+                   frame: CGRect(x: 0.958, y: 0.22, width: 0.042, height: 0.72), label: "RT")
     ]
 
     /// Раскладка для гонок: крупные педали, руль (тач или гироскоп), минимум кнопок.
     static let racing: [PadControl] = [
         // Зона руля: плавающий стик в левой половине
         PadControl(id: "ls", kind: .stick(axis: .left, floating: true),
-                   frame: CGRect(x: 0.03, y: 0.12, width: 0.40, height: 0.80),
+                   frame: CGRect(x: 0.03, y: 0.15, width: 0.40, height: 0.77),
                    label: "РУЛЬ", isRound: true, stickRadius: 0.16),
 
         // Педали: тормоз ближе к центру, газ — на самом краю (как у настоящего
         // контроллера: правый большой палец нажимает газ краем ладони).
         PadControl(id: "lt", kind: .trigger(isLeft: true),
-                   frame: CGRect(x: 0.72, y: 0.12, width: 0.11, height: 0.80), label: "ТОРМ"),
+                   frame: CGRect(x: 0.72, y: 0.15, width: 0.11, height: 0.77), label: "ТОРМ"),
         PadControl(id: "rt", kind: .trigger(isLeft: false),
-                   frame: CGRect(x: 0.86, y: 0.12, width: 0.11, height: 0.80), label: "ГАЗ"),
+                   frame: CGRect(x: 0.86, y: 0.15, width: 0.11, height: 0.77), label: "ГАЗ"),
 
         // Кнопки
         PadControl(id: "btn_a", kind: .button(mask: Btn.a),
