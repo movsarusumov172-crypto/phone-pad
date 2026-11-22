@@ -164,7 +164,11 @@ jobs:
             xcrun simctl launch "$UDID" com.phonepad.PhonePad -layout "$layout"
             sleep 5
             name=$(echo "$layout" | tr ' ' '-' | tr -d '()')
-            xcrun simctl io "$UDID" screenshot "shot-$name.png"
+            xcrun simctl io "$UDID" screenshot "raw-$name.png"
+            # Симулятор в портрете, а приложение только в ландшафте — iOS рисует
+            # интерфейс повёрнутым. Разворачиваем снимок, чтобы его можно было
+            # смотреть в нормальной ориентации.
+            sips -r 90 "raw-$name.png" --out "shot-$name.png" >/dev/null
             echo "Готово: shot-$name.png"
           done
 

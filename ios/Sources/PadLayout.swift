@@ -96,15 +96,15 @@ enum PadLayout {
     static let racing: [PadControl] = [
         // Зона руля: плавающий стик в левой половине
         PadControl(id: "ls", kind: .stick(axis: .left, floating: true),
-                   frame: CGRect(x: 0.03, y: 0.15, width: 0.40, height: 0.77),
+                   frame: CGRect(x: 0.03, y: 0.17, width: 0.40, height: 0.75),
                    label: "РУЛЬ", isRound: true, stickRadius: 0.16),
 
         // Педали: тормоз ближе к центру, газ — на самом краю (как у настоящего
         // контроллера: правый большой палец нажимает газ краем ладони).
         PadControl(id: "lt", kind: .trigger(isLeft: true),
-                   frame: CGRect(x: 0.72, y: 0.15, width: 0.11, height: 0.77), label: "ТОРМ"),
+                   frame: CGRect(x: 0.72, y: 0.17, width: 0.11, height: 0.75), label: "ТОРМ"),
         PadControl(id: "rt", kind: .trigger(isLeft: false),
-                   frame: CGRect(x: 0.86, y: 0.15, width: 0.11, height: 0.77), label: "ГАЗ"),
+                   frame: CGRect(x: 0.86, y: 0.17, width: 0.11, height: 0.75), label: "ГАЗ"),
 
         // Кнопки
         PadControl(id: "btn_a", kind: .button(mask: Btn.a),
