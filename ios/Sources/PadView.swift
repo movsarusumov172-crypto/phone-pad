@@ -101,6 +101,11 @@ final class PadTouchView: UIView {
 
     private var state = PadState()
 
+    /// Полоса сверху, которую занимает панель статуса приложения.
+    /// Элементы пада не должны под неё заезжать — иначе кнопки «HB»/«RST»
+    /// прячутся под HUD.
+    var topReserved: CGFloat = 58
+
     func apply(layout kind: PadLayoutKind) {
         let newControls = PadLayout.controls(for: kind)
         // Сравниваем раскладки целиком, а не только идентификаторы: смена
@@ -116,13 +121,18 @@ final class PadTouchView: UIView {
         frames.removeAll(keepingCapacity: true)
         stickRadii.removeAll(keepingCapacity: true)
 
-        let shortSide = min(bounds.width, bounds.height)
+        // Верхняя полоса резервируется под панель статуса, остальное место
+        // делится между элементами пада.
+        let top = min(bounds.height * 0.5, max(0, topReserved))
+        let usableHeight = max(1, bounds.height - top)
+        let shortSide = min(bounds.width, usableHeight)
+
         for control in controls {
             let rect = CGRect(
                 x: control.frame.minX * bounds.width,
-                y: control.frame.minY * bounds.height,
+                y: top + control.frame.minY * usableHeight,
                 width: control.frame.width * bounds.width,
-                height: control.frame.height * bounds.height)
+                height: control.frame.height * usableHeight)
             frames[control.id] = rect
             stickRadii[control.id] = control.stickRadius * shortSide
         }
@@ -387,14 +397,22 @@ final class PadTouchView: UIView {
             UIBezierPath(roundedRect: fill, cornerRadius: 8).fill()
         }
 
-        // Подпись — внизу ползунка, чтобы не перекрывалась заливкой.
+        // Подпись — вверху ползунка, чтобы не перекрывалась заливкой.
         var labelFrame = frame
-        labelFrame.origin.y = frame.maxY - frame.height * 0.28
-        labelFrame.size.height = frame.height * 0.28
-        drawLabel(control.label, in: labelFrame)
+        labelFrame.origin.y = frame.minY
+        labelFrame.size.height = min(22, frame.height * 0.2)
+        drawLabel(control.label, in: labelFrame, maxFontSize: 15)
     }
 
     private func drawStick(_ control: PadControl, frame: CGRect) {
+        // Контур зоны: по нему видно, где «живёт» руль, даже когда стик плавает.
+        let zone = UIBezierPath(roundedRect: frame, cornerRadius: 18)
+        UIColor.white.withAlphaComponent(0.05).setFill()
+        zone.fill()
+        UIColor.white.withAlphaComponent(0.12).setStroke()
+        zone.lineWidth = 1.0
+        zone.stroke()
+
         let origin = stickOrigins[control.id]
             ?? CGPoint(x: frames[control.id]?.midX ?? 0, y: frames[control.id]?.midY ?? 0)
         let radius = max(20, stickRadii[control.id] ?? 60)
@@ -414,17 +432,35 @@ final class PadTouchView: UIView {
         UIColor.white.withAlphaComponent(0.45).setFill()
         knob.fill()
 
-        // Подпись всегда на месте зоны стика (а не в точке касания).
-        drawLabel(control.label, in: frame)
+        // Подпись зоны — мелко, в верхнем углу: стик может быть в любой точке,
+        // а надпись по центру оказалась бы под пальцем.
+        var labelFrame = frame
+        labelFrame.origin.y = frame.minY
+        labelFrame.size.height = min(20, frame.height * 0.14)
+        drawLabel(control.label, in: labelFrame, maxFontSize: 14)
     }
 
-    private func drawLabel(_ text: String, in frame: CGRect) {
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: max(10, frame.height * 0.32), weight: .semibold),
+    /// Рисует подпись, которая гарантированно помещается в рамку:
+    /// кегль ограничен сверху и при необходимости ужимается по ширине.
+    private func drawLabel(_ text: String, in frame: CGRect, maxFontSize: CGFloat = 18) {
+        guard !text.isEmpty, frame.width > 6, frame.height > 6 else { return }
+
+        var size = max(9, min(maxFontSize, frame.height * 0.55))
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: size, weight: .semibold),
             .foregroundColor: UIColor.white.withAlphaComponent(0.85)
         ]
-        let size = (text as NSString).size(withAttributes: attributes)
-        let origin = CGPoint(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2)
+
+        var textSize = (text as NSString).size(withAttributes: attributes)
+        if textSize.width > frame.width {
+            // Ужимаем под шрифт, чтобы текст не вылезал за края элемента.
+            size = max(7, size * frame.width / textSize.width)
+            attributes[.font] = UIFont.systemFont(ofSize: size, weight: .semibold)
+            textSize = (text as NSString).size(withAttributes: attributes)
+        }
+
+        let origin = CGPoint(x: frame.midX - textSize.width / 2,
+                             y: frame.midY - textSize.height / 2)
         (text as NSString).draw(at: origin, withAttributes: attributes)
     }
 }

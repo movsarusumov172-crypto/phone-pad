@@ -93,31 +93,31 @@ enum PadLayout {
     static let racing: [PadControl] = [
         // Зона руля: плавающий стик в левой половине
         PadControl(id: "ls", kind: .stick(axis: .left, floating: true),
-                   frame: CGRect(x: 0.02, y: 0.18, width: 0.42, height: 0.64),
-                   label: "РУЛЬ", isRound: true, stickRadius: 0.14),
+                   frame: CGRect(x: 0.03, y: 0.12, width: 0.40, height: 0.80),
+                   label: "РУЛЬ", isRound: true, stickRadius: 0.16),
 
         // Педали: тормоз ближе к центру, газ — на самом краю (как у настоящего
         // контроллера: правый большой палец нажимает газ краем ладони).
         PadControl(id: "lt", kind: .trigger(isLeft: true),
-                   frame: CGRect(x: 0.78, y: 0.18, width: 0.10, height: 0.64), label: "ТОРМ"),
+                   frame: CGRect(x: 0.72, y: 0.12, width: 0.11, height: 0.80), label: "ТОРМ"),
         PadControl(id: "rt", kind: .trigger(isLeft: false),
-                   frame: CGRect(x: 0.90, y: 0.18, width: 0.10, height: 0.64), label: "ГАЗ"),
+                   frame: CGRect(x: 0.86, y: 0.12, width: 0.11, height: 0.80), label: "ГАЗ"),
 
         // Кнопки
         PadControl(id: "btn_a", kind: .button(mask: Btn.a),
-                   frame: CGRect(x: 0.60, y: 0.60, width: 0.09, height: 0.09),
+                   frame: CGRect(x: 0.55, y: 0.58, width: 0.12, height: 0.12),
                    label: "A", isRound: true),
         PadControl(id: "btn_b", kind: .button(mask: Btn.b),
-                   frame: CGRect(x: 0.60, y: 0.48, width: 0.09, height: 0.09),
+                   frame: CGRect(x: 0.55, y: 0.42, width: 0.12, height: 0.12),
                    label: "B", isRound: true),
         PadControl(id: "lb", kind: .button(mask: Btn.lb),
-                   frame: CGRect(x: 0.60, y: 0.36, width: 0.09, height: 0.09),
-                   label: "HB"),
+                   frame: CGRect(x: 0.55, y: 0.26, width: 0.12, height: 0.12),
+                   label: "HB", isRound: true),
         PadControl(id: "rb", kind: .button(mask: Btn.rb),
-                   frame: CGRect(x: 0.60, y: 0.24, width: 0.09, height: 0.09),
-                   label: "RST"),
+                   frame: CGRect(x: 0.55, y: 0.10, width: 0.12, height: 0.12),
+                   label: "RST", isRound: true),
         PadControl(id: "start", kind: .button(mask: Btn.start),
-                   frame: CGRect(x: 0.50, y: 0.06, width: 0.07, height: 0.08), label: "≡")
+                   frame: CGRect(x: 0.55, y: 0.78, width: 0.12, height: 0.12), label: "≡")
     ]
 
     static func controls(for kind: PadLayoutKind) -> [PadControl] {

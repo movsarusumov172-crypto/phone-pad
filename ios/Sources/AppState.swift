@@ -73,6 +73,18 @@ final class AppState: ObservableObject {
         serverPort = defaults.object(forKey: "serverPort") as? Int ?? 8888
         feedbackPort = defaults.object(forKey: "feedbackPort") as? Int ?? 8889
 
+        // Раскладку тоже запоминаем, а launch-аргумент `-layout <имя>` позволяет
+        // открыть нужную раскладку (используется автотестами в CI).
+        if let saved = defaults.string(forKey: "layout"), let kind = PadLayoutKind(rawValue: saved) {
+            layout = kind
+        }
+        if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "-layout"),
+           index + 1 < ProcessInfo.processInfo.arguments.count,
+           let kind = PadLayoutKind(rawValue: ProcessInfo.processInfo.arguments[index + 1]) {
+            layout = kind
+        }
+        pad.layoutKind = layout
+
         net.onFeedback = { [weak self] message in
             self?.handle(message)
         }
@@ -102,7 +114,11 @@ final class AppState: ObservableObject {
 
         $layout
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] value in self?.pad.layoutKind = value }
+            .sink { [weak self] value in
+                guard let self else { return }
+                self.pad.layoutKind = value
+                UserDefaults.standard.set(value.rawValue, forKey: "layout")
+            }
             .store(in: &cancellables)
 
         $soundEnabled
