@@ -44,15 +44,15 @@ enum PadLayout {
                    frame: CGRect(x: 0.075, y: 0.50, width: 0.20, height: 0.38),
                    label: "L", isRound: true, stickRadius: 0.085),
 
-        // D-pad (слева сверху, под панелью HUD)
+        // D-pad (слева сверху, ниже панели HUD)
         PadControl(id: "dpad_up", kind: .button(mask: Btn.dpadUp),
-                   frame: CGRect(x: 0.108, y: 0.16, width: 0.074, height: 0.074), label: "▲"),
+                   frame: CGRect(x: 0.108, y: 0.19, width: 0.074, height: 0.074), label: "▲"),
         PadControl(id: "dpad_down", kind: .button(mask: Btn.dpadDown),
-                   frame: CGRect(x: 0.108, y: 0.345, width: 0.074, height: 0.074), label: "▼"),
+                   frame: CGRect(x: 0.108, y: 0.375, width: 0.074, height: 0.074), label: "▼"),
         PadControl(id: "dpad_left", kind: .button(mask: Btn.dpadLeft),
-                   frame: CGRect(x: 0.062, y: 0.253, width: 0.074, height: 0.074), label: "◀"),
+                   frame: CGRect(x: 0.062, y: 0.283, width: 0.074, height: 0.074), label: "◀"),
         PadControl(id: "dpad_right", kind: .button(mask: Btn.dpadRight),
-                   frame: CGRect(x: 0.154, y: 0.253, width: 0.074, height: 0.074), label: "▶"),
+                   frame: CGRect(x: 0.154, y: 0.283, width: 0.074, height: 0.074), label: "▶"),
 
         // Правый стик (низ справа)
         PadControl(id: "rs", kind: .stick(axis: .right, floating: true),
@@ -96,15 +96,15 @@ enum PadLayout {
     static let racing: [PadControl] = [
         // Зона руля: плавающий стик в левой половине
         PadControl(id: "ls", kind: .stick(axis: .left, floating: true),
-                   frame: CGRect(x: 0.03, y: 0.17, width: 0.40, height: 0.75),
+                   frame: CGRect(x: 0.03, y: 0.19, width: 0.40, height: 0.73),
                    label: "РУЛЬ", isRound: true, stickRadius: 0.16),
 
         // Педали: тормоз ближе к центру, газ — на самом краю (как у настоящего
         // контроллера: правый большой палец нажимает газ краем ладони).
         PadControl(id: "lt", kind: .trigger(isLeft: true),
-                   frame: CGRect(x: 0.72, y: 0.17, width: 0.11, height: 0.75), label: "ТОРМ"),
+                   frame: CGRect(x: 0.72, y: 0.19, width: 0.11, height: 0.73), label: "ТОРМ"),
         PadControl(id: "rt", kind: .trigger(isLeft: false),
-                   frame: CGRect(x: 0.86, y: 0.17, width: 0.11, height: 0.75), label: "ГАЗ"),
+                   frame: CGRect(x: 0.86, y: 0.19, width: 0.11, height: 0.73), label: "ГАЗ"),
 
         // Кнопки
         PadControl(id: "btn_a", kind: .button(mask: Btn.a),
