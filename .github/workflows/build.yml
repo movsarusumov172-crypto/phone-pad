@@ -160,7 +160,7 @@ jobs:
             echo "Готово: layout-$name.png"
           done
 
-      - name: Артефакт: скриншоты раскладок
+      - name: "Артефакт: скриншоты раскладок"
         uses: actions/upload-artifact@v4
         with:
           name: PhonePad-ios-screenshots
