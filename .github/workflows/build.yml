@@ -122,6 +122,7 @@ jobs:
           build
 
       - name: Скриншоты раскладок (симулятор iPhone)
+        continue-on-error: true
         working-directory: ios
         run: |
           set -euo pipefail
@@ -148,23 +149,30 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
 
+          # Симулятор стартует в портрете, а приложение — только ландшафт.
+          # Поворачиваем устройство через Simulator (⌘→), иначе снимок будет
+          # бесполезным.
+          open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+          sleep 6
+          osascript -e 'tell application "Simulator" to activate' \
+                    -e 'tell application "System Events" to keystroke (ASCII character 29) using command down' \
+                    || echo "Не удалось повернуть симулятор — снимок будет в портрете"
+          sleep 4
+
           for layout in "Полная (DualSense)" "Гонки"; do
             xcrun simctl terminate "$UDID" com.phonepad.PhonePad 2>/dev/null || true
             xcrun simctl launch "$UDID" com.phonepad.PhonePad -layout "$layout"
-            sleep 4
+            sleep 5
             name=$(echo "$layout" | tr ' ' '-' | tr -d '()')
             xcrun simctl io "$UDID" screenshot "shot-$name.png"
-            # Приложение работает только в ландшафте, а симулятор в портрете —
-            # разворачиваем снимок.
-            sips -r -90 "shot-$name.png" --out "layout-$name.png" >/dev/null
-            echo "Готово: layout-$name.png"
+            echo "Готово: shot-$name.png"
           done
 
       - name: "Артефакт: скриншоты раскладок"
         uses: actions/upload-artifact@v4
         with:
           name: PhonePad-ios-screenshots
-          path: ios/layout-*.png
+          path: ios/shot-*.png
           retention-days: 30
 
       - name: Сборка для устройства (без подписи)

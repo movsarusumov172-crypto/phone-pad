@@ -432,10 +432,10 @@ final class PadTouchView: UIView {
         UIColor.white.withAlphaComponent(0.45).setFill()
         knob.fill()
 
-        // Подпись зоны — мелко, в верхнем углу: стик может быть в любой точке,
-        // а надпись по центру оказалась бы под пальцем.
+        // Подпись зоны — мелко, в нижнем углу: сверху может лежать HUD,
+        // а стик в любой точке зоны.
         var labelFrame = frame
-        labelFrame.origin.y = frame.minY
+        labelFrame.origin.y = frame.maxY - min(20, frame.height * 0.14)
         labelFrame.size.height = min(20, frame.height * 0.14)
         drawLabel(control.label, in: labelFrame, maxFontSize: 14)
     }

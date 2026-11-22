@@ -5,43 +5,43 @@ struct HudView: View {
     let hud: HudData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 14) {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text("\(hud.speed)")
-                    .font(.system(size: 46, weight: .heavy, design: .rounded))
+                    .font(.system(size: 34, weight: .heavy, design: .rounded))
                     .monospacedDigit()
                 Text("км/ч")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.6))
 
                 if hud.isRaceOn {
                     Text(hud.gear == 0 ? "N" : "\(hud.gear)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(hud.gear > 0 ? .orange : .white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 1)
                         .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
                 }
             }
 
             if hud.isRaceOn {
                 VStack(alignment: .leading, spacing: 3) {
-                    bar(value: Double(hud.rpm) / Double(max(1, hud.maxRpm)), color: .orange, height: 6)
+                    bar(value: Double(hud.rpm) / Double(max(1, hud.maxRpm)), color: .orange, height: 5)
                     HStack(spacing: 10) {
-                        bar(value: Double(hud.throttle) / 255, color: .green, height: 4)
-                        bar(value: Double(hud.brake) / 255, color: .red, height: 4)
+                        bar(value: Double(hud.throttle) / 255, color: .green, height: 3)
+                        bar(value: Double(hud.brake) / 255, color: .red, height: 3)
                     }
                     if hud.slip > 0.05 {
                         Text("slip \(String(format: "%.2f", hud.slip))")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 9, weight: .medium))
                             .foregroundStyle(.yellow)
                     }
                 }
             }
         }
         .foregroundStyle(.white)
-        .padding(12)
-        .background(Color.black.opacity(0.45), in: RoundedRectangle(cornerRadius: 14))
+        .padding(10)
+        .background(Color.black.opacity(0.45), in: RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 6)
     }
 
